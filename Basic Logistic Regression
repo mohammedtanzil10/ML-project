@@ -1,0 +1,31 @@
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+# --- 1. Create a Synthetic Dataset (Our Own Data) ---
+# Feature 1 (X1): Hours Studied
+# Feature 2 (X2): Test Anxiety Level (Scaled 0-10)
+# Target (y): Pass (1) or Fail (0)
+np.random.seed(42)
+hours_studied = np.random.uniform(2, 10, 50)
+anxiety_level = np.random.uniform(0, 8, 50)
+
+# The probability of passing is higher with more hours and less anxiety
+prob_pass = 1 / (1 + np.exp(-(0.5 * hours_studied - 0.7 * anxiety_level + 1)))
+y = (prob_pass > 0.5).astype(int) # Convert probability to binary outcome
+
+X = np.stack((hours_studied, anxiety_level), axis=1)
+
+# --- 2. Initialize and Train the Logistic Regression Model ---
+model = LogisticRegression(solver='liblinear', random_state=42)
+model.fit(X, y)
+
+# --- 3. Print Results ---
+print("--- Logistic Regression Model Results ---")
+print(f"Features: [Hours Studied, Anxiety Level]")
+print(f"Intercept (Bias): {model.intercept_[0]:.4f}")
+print(f"Coefficients (Weights): {model.coef_[0].round(4)}")
+
+# Interpretation:
+print("\nInterpretation:")
+print(f"A positive coefficient for Hours Studied ({model.coef_[0][0]:.4f}) means more study time increases the log-odds of passing.")
+print(f"A negative coefficient for Anxiety Level ({model.coef_[0][1]:.4f}) means higher anxiety decreases the log-odds of passing.")

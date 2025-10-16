@@ -1,0 +1,81 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# --- 1. Generate Synthetic Data ---
+np.random.seed(42)
+X = np.random.randn(100, 2)
+# Create a target y based on a linear combination of X, plus noise
+y = (X[:, 0] + X[:, 1] + np.random.randn(100) * 0.5 > 0.5).astype(int)
+
+# --- 2. 2-Way Data Splitting (Train and Test) ---
+# Split the data into 70% training and 30% testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+print(f"Train samples: {len(X_train)}, Test samples: {len(X_test)}")
+
+# --- 3. Initialize and Train the Model ---
+model = LogisticRegression(solver='liblinear', random_state=42)
+model.fit(X_train, y_train)
+
+# Make predictions and calculate probabilities on the test set
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, 1] # Probability of class 1
+
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Test Set Accuracy: {accuracy:.4f}")
+
+# --- 4. Generate Graphs ---
+
+# Convert test data to a DataFrame for easier plotting
+test_df = pd.DataFrame({
+    'Feature 1': X_test[:, 0],
+    'Feature 2': X_test[:, 1],
+    'Actual Class': y_test,
+    'Predicted Probability (Class 1)': y_pred_proba
+})
+
+plt.figure(figsize=(12, 5))
+
+# Graph A: Visualization of the 2-Way Split (Test Set)
+plt.subplot(1, 2, 1)
+sns.scatterplot(
+    data=test_df,
+    x='Feature 1',
+    y='Feature 2',
+    hue='Actual Class',
+    style='Actual Class',
+    palette='viridis',
+    s=100
+)
+plt.title('Test Set Data Distribution by Actual Class')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.legend(title='Actual Class')
+
+# Graph B: Visualization of Predicted Probabilities
+plt.subplot(1, 2, 2)
+sns.histplot(
+    data=test_df,
+    x='Predicted Probability (Class 1)',
+    hue='Actual Class',
+    multiple='stack', # Stack the bars for each class
+    binwidth=0.05,
+    kde=True,
+    palette='magma'
+)
+plt.axvline(0.5, color='red', linestyle='--', label='Decision Boundary (0.5)')
+plt.title('Predicted Probability Distribution (Test Set)')
+plt.xlabel('P(Class = 1)')
+plt.ylabel('Count')
+plt.legend(title='Actual Class')
+
+plt.tight_layout()
+plt.show()
